@@ -1,7 +1,7 @@
 
 import express, { Application, Request, Response } from "express";
 import connectDB from "./config/db";
-import userRotes from "./routes/userRoutes"
+import userRoutes from "./routes/userRoutes"
 
 
 
@@ -14,7 +14,7 @@ app.use(express.json());
 
 connectDB();
 
-app.use('api/auth', userRotes)
+app.use('/api/auth', userRoutes)
 
 app.get("/health", (req: Request, res: Response) => {
     res.json({
