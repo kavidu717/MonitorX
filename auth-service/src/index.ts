@@ -1,5 +1,6 @@
 
 import express, { Application, Request, Response } from "express";
+import connectDB from "./config/db";
 
 
 
@@ -9,6 +10,8 @@ import express, { Application, Request, Response } from "express";
 const app: Application = express();
 
 app.use(express.json());
+
+connectDB();
 
 app.get("/health", (req: Request, res: Response) => {
     res.json({
