@@ -1,0 +1,29 @@
+
+import express, { Application, Request, Response } from "express";
+
+
+
+
+
+
+const app: Application = express();
+
+app.use(express.json());
+
+app.get("/health", (req: Request, res: Response) => {
+    res.json({
+        status: "auth service is healthy",
+
+    })
+})
+
+const port = process.env.PORT || 5001;
+
+app.listen(port, () => {
+    console.log(`auth service is running on port ${port}`)
+})
+
+
+
+
+
