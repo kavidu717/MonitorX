@@ -73,3 +73,55 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
 
 
 })
+
+// this is for the verify otp
+export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
+    const { email, otp } = req.body
+
+    // find the user by the email
+    const user = await User.findOne({ email })
+
+    if (!user) {
+        res.status(404)
+        throw new Error('user not found')
+    }
+
+    if (user.otpCode !== otp) {
+        res.status(400)
+        throw new Error('invalid otp provide')
+    }
+
+    if (user.otpExpires && user.otpExpires < new Date()) {
+        res.status(400);
+        throw new Error('Your OTP has expired. Please request a new one.');
+    }
+
+    user.otpCode = '';
+    user.otpExpires
+    await user.save();
+
+    // generate the token
+
+    const accessToken = generateAccessToken(user._id.toString(), user.role)
+    const refreshToken = generateRefreshToken(user._id.toString())
+
+    res.cookie('jwt_refresh', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
+
+
+    })
+
+    res.status(200).json({
+        message: "email verified success",
+        _id: user._id,
+        firstName: user.firstName,
+        email: user.email,
+        role: user.role,
+        accessToken,
+    })
+
+
+})
