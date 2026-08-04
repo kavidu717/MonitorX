@@ -125,3 +125,45 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
 
 
 })
+
+// login the user 
+export const loginUser = asyncHandler(async (req: Request, res: Response) => {
+    const { email, password } = req.body
+
+    // find the user by email
+    const user = await User.findOne({ email })
+
+    if (user && (await user.comparePassword(password))) {
+
+        const accessToken = generateAccessToken(user._id.toString(), user.role)
+        const refreshToken = generateRefreshToken(user._id.toString())
+
+
+        res.cookie('jwt_refresh', refreshToken, {
+
+            httpOnly: true, // Not accessible via document.cookie
+            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+            sameSite: 'strict',       // CSRF protection
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+        });
+
+        res.json({
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role,
+            accessToken,
+        });
+
+
+
+    } else {
+        res.status(401)
+        throw new Error('invalid username or password')
+    }
+
+
+
+})
+
