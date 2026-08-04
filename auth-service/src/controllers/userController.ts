@@ -1,8 +1,9 @@
 import asyncHandler from "express-async-handler";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/User";
 import { Request, Response } from "express";
 import { sendOtpEmail } from "../services/emailService";
+
 
 
 
@@ -163,6 +164,47 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         throw new Error('invalid username or password')
     }
 
+
+
+})
+
+interface RefreshTokenPayload extends JwtPayload {
+    id: string;
+}
+
+export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
+    const token = req.cookies.jwt_refresh
+
+    if (!token) {
+        res.status(401)
+        throw new Error(' not authorized no refresh token provided')
+    }
+    try {
+
+
+        // verify the refresh token
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_REFRESH_SECRET as string
+        ) as RefreshTokenPayload;
+
+        const user = await User.findById(decoded.id)
+
+        if (!user) {
+            res.status(401);
+            throw new Error('Not authorized, user no longer exists');
+        }
+
+        const newAccessToken = generateAccessToken(user._id.toString(), user.role)
+
+        res.status(200).json({
+            accessToken: newAccessToken,
+        })
+
+    } catch (error) {
+        res.status(401)
+        throw new Error('not authorized to access this resource')
+    }
 
 
 })
