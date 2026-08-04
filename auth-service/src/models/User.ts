@@ -10,6 +10,8 @@ export interface IUser {
     profileImage?: string;
     googleId?: string;
     role: 'admin' | 'user';
+    isBlocked: boolean;
+
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
     otpCode?: string;
@@ -52,6 +54,10 @@ const UserSchema = new Schema<IUserDocument>(
             type: String,
             unique: true,
             sparse: true,
+        },
+        isBlocked: {
+            type: Boolean,
+            default: false,
         },
         role: {
             type: String,
