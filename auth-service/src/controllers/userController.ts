@@ -315,4 +315,19 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
 
 })
 
+// get the all user 
+export const getAllUser = asyncHandler(async (req: Request, res: Response) => {
+    const users = await User.find().select('-password')
+
+    res.status(200).json({
+        success: true,
+        users,
+    })
+
+}
+
+)
+
+
+
 

@@ -1,6 +1,6 @@
 import express from 'express';
-import { forgotPassword, getProfile, loginUser, refreshToken, registerUser, resetPassword, updatePassword, verifyOtp } from '../controllers/userController';
-import { protect } from '../middleware/authMiddleware';
+import { forgotPassword, getAllUser, getProfile, loginUser, refreshToken, registerUser, resetPassword, updatePassword, verifyOtp } from '../controllers/userController';
+import { adminOnly, protect } from '../middleware/authMiddleware';
 
 
 
@@ -18,5 +18,8 @@ router.post('/reset-password', resetPassword)
 
 router.get('/me', protect, getProfile)
 router.put('/update-password', protect, updatePassword)
+
+
+router.get('/admin/users', protect, adminOnly, getAllUser)
 
 export default router
