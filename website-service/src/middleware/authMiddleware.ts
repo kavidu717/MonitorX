@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import asyncHandler from "express-async-handler";
 
+
 export interface AuthenticatedRequest extends Request {
     user?: { id: string; role: string };
 }

@@ -1,6 +1,6 @@
 import express, { Application, Request, Response } from "express"
 import connectDB from "./config/db"
-
+import websitesRoutes from "./routes/websitesRoutes"
 
 
 const app: Application = express()
@@ -11,9 +11,20 @@ connectDB()
 
 app.get("/health", (req: Request, res: Response) => {
     res.json({
-        status: "website service is healthy",
+        message: "website service is healthy",
     })
+
 })
+
+app.get("/api-test", (req: Request, res: Response) => {
+    res.json({
+        message: "API test is working"
+    });
+});
+
+console.log("Loading website routes...");
+app.use('/api/websites', websitesRoutes)
+
 
 const port = process.env.PORT || 5002
 
