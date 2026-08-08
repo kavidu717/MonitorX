@@ -32,3 +32,20 @@ export const createWebsite = asyncHandler(
         res.status(201).json(website);
     }
 );
+
+
+export const getWebsites = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+
+        if (!req.user) {
+            res.status(401);
+            throw new Error("Not authorized");
+        }
+
+        const websites = await Website.find({
+            userId: req.user.id
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json(websites);
+    }
+);

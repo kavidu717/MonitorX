@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware";
-import { createWebsite } from "../controllers/websiteController";
+import { createWebsite, getWebsites } from "../controllers/websiteController";
 import { Request, Response } from "express";
 
 
@@ -15,6 +15,7 @@ router.get("/test", (req: Request, res: Response) => {
 });
 
 router.post("/", protect, createWebsite)
+router.get("/", protect, getWebsites)
 
 
 
