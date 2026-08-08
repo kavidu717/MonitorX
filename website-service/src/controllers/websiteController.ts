@@ -49,3 +49,67 @@ export const getWebsites = asyncHandler(
         res.status(200).json(websites);
     }
 );
+
+export const getWebsitesById = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+
+        if (!req.user) {
+            res.status(401);
+            throw new Error("Not authorized");
+        }
+
+
+        const { id } = req.params;
+
+        if (!id || Array.isArray(id)) {
+            res.status(400);
+            throw new Error("Invalid website ID");
+        }
+
+        const website = await Website.findOne({
+            _id: id,
+            userId: req.user.id
+        })
+
+        if (!website) {
+            res.status(404);
+            throw new Error('Website not found or unauthorized');
+        }
+
+        res.status(200).json(website);
+    }
+)
+
+export const deleteWebsite = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+
+
+    if (!req.user) {
+        res.status(401);
+        throw new Error("Not authorized");
+    }
+
+    const { id } = req.params;
+
+    if (!id || Array.isArray(id)) {
+        res.status(400);
+        throw new Error("Invalid website ID");
+    }
+
+    const website = await Website.findOne({
+        _id: id,
+        userId: req.user?.id,
+    });
+
+    if (!website) {
+        res.status(404);
+        throw new Error('Website not found or unauthorized');
+    }
+
+    await website.deleteOne();
+
+    res.status(200).json({ message: 'Website removed successfully', id: req.params.id });
+});
+
+
+
+
