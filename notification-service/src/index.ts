@@ -29,7 +29,9 @@ const startConsumer = async () => {
             if (msg !== null) {
                 const data = JSON.parse(msg.content.toString());
 
-                const actualLatency = data.latency || data.time;
+
+
+                const actualLatency = data.responseTime;
                 console.log(`[+] Received Data -> URL: ${data.url} | Status: ${data.status} | Latency: ${actualLatency}ms`);
                 channel.ack(msg);
 
