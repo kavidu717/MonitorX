@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
 import amqp from 'amqplib';
+import PingLog from './models/PingLog';
 
 
 dotenv.config();
@@ -25,7 +26,7 @@ const startConsumer = async () => {
 
         console.log(`RabbitMQ Connected. Waiting for messages in "${queue}"...`);
 
-        channel.consume(queue, (msg) => {
+        channel.consume(queue, async (msg) => {
             if (msg !== null) {
                 const data = JSON.parse(msg.content.toString());
 
@@ -33,6 +34,19 @@ const startConsumer = async () => {
 
                 const actualLatency = data.responseTime;
                 console.log(`[+] Received Data -> URL: ${data.url} | Status: ${data.status} | Latency: ${actualLatency}ms`);
+
+                const newLog = new PingLog({
+                    url: data.url,
+                    status: data.status,
+                    latency: actualLatency,
+
+                })
+
+                await newLog.save()
+                console.log(`[x] Saved to Analytics DB!`);
+
+
+
                 channel.ack(msg);
 
             }

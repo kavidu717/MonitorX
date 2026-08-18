@@ -31,7 +31,7 @@ const PingLogSchema: Schema = new Schema({
     checkAt:
     {
         type: Date,
-        required: true
+        default: Date.now
     }
 })
 
