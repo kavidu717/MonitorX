@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5004;
-
+const activeAlerts = new Set<string>();
 
 connectDB();
 
@@ -48,9 +48,33 @@ const startConsumer = async () => {
 
                 if (data.status === 'DOWN') {
 
-                    console.log(`DOWN status detected for ${data.url}. Triggering email alert...`);
+                    if (!activeAlerts.has(data.url)) {
 
-                    await sendAlertEmail(data.url, data.status, data.latency);
+                        console.log(` New DOWN status detected for ${data.url}. Triggering email alert...`);
+
+                        await sendAlertEmail(data.url, data.status, actualLatency);
+
+
+
+                        activeAlerts.add(data.url);
+
+                    } else {
+
+                        console.log(`[!] Alert already sent for ${data.url}. Skipping email.`);
+
+                    }
+
+                } else if (data.status === 'UP') {
+
+                    if (activeAlerts.has(data.url)) {
+
+                        console.log(` ${data.url} is back UP! Clearing alert status.`);
+
+
+
+                        activeAlerts.delete(data.url);
+
+                    }
 
                 }
 
