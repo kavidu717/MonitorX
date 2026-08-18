@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db';
 import amqp from 'amqplib';
 import PingLog from './models/PingLog';
+import { sendAlertEmail } from './utils/email';
 
 
 dotenv.config();
@@ -45,7 +46,13 @@ const startConsumer = async () => {
                 await newLog.save()
                 console.log(`[x] Saved to Analytics DB!`);
 
+                if (data.status === 'DOWN') {
 
+                    console.log(`DOWN status detected for ${data.url}. Triggering email alert...`);
+
+                    await sendAlertEmail(data.url, data.status, data.latency);
+
+                }
 
                 channel.ack(msg);
 
