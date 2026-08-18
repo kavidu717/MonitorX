@@ -1,13 +1,19 @@
 "use client"
 import { useState } from "react"
-import axios from "axios"
+
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import api from "@/utils/axios";
+import { useAuthStore } from "@/store/useAuthStore";
 
 
 export default function LoginPage() {
 
     const router = useRouter();
+    const setToken = useAuthStore((state) => state.setToken)
+
+
+
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
@@ -23,13 +29,13 @@ export default function LoginPage() {
         console.log(email, password);
 
         try {
-            const response = await axios.post("http://localhost:8080/api/auth/login", {
+            const response = await api.post("/auth/login", {
                 email: email,
                 password: password,
             });
 
             const token = response.data.accessToken;
-            localStorage.setItem("token", token);
+            setToken(token)
 
             router.push("/");
         }
