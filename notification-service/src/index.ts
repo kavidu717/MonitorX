@@ -5,33 +5,44 @@ import amqp from 'amqplib';
 import PingLog from './models/PingLog';
 import { sendAlertEmail } from './utils/email';
 
-
 dotenv.config();
 
 const app = express();
+app.use(express.json());
+
 const PORT = process.env.PORT || 5004;
 const activeAlerts = new Set<string>();
 
 connectDB();
 
+app.get('/api/logs/:url', async (req, res) => {
+    try {
+        const decodedUrl = decodeURIComponent(req.params.url);
+
+        const logs = await PingLog.find({ url: decodedUrl })
+            .sort({ checkAt: -1 })
+            .limit(20);
+
+        res.status(200).json(logs.reverse());
+    } catch (error: any) {
+        res.status(500).json({ message: "Failed to fetch logs", error: error.message });
+    }
+});
 
 const startConsumer = async () => {
     try {
-
         const ampqServer = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
-        const connection = await amqp.connect(ampqServer)
-        const channel = await connection.createChannel()
+        const connection = await amqp.connect(ampqServer);
+        const channel = await connection.createChannel();
 
-        const queue = 'health_check'
-        await channel.assertQueue(queue, { durable: true })
+        const queue = 'health_check';
+        await channel.assertQueue(queue, { durable: true });
 
         console.log(`RabbitMQ Connected. Waiting for messages in "${queue}"...`);
 
         channel.consume(queue, async (msg) => {
             if (msg !== null) {
                 const data = JSON.parse(msg.content.toString());
-
-
 
                 const actualLatency = data.responseTime;
                 console.log(`[+] Received Data -> URL: ${data.url} | Status: ${data.status} | Latency: ${actualLatency}ms`);
@@ -40,58 +51,34 @@ const startConsumer = async () => {
                     url: data.url,
                     status: data.status,
                     latency: actualLatency,
+                });
 
-                })
-
-                await newLog.save()
+                await newLog.save();
                 console.log(`[x] Saved to Analytics DB!`);
 
                 if (data.status === 'DOWN') {
-
                     if (!activeAlerts.has(data.url)) {
-
                         console.log(` New DOWN status detected for ${data.url}. Triggering email alert...`);
-
                         await sendAlertEmail(data.url, data.status, actualLatency);
-
-
-
                         activeAlerts.add(data.url);
-
                     } else {
-
                         console.log(`[!] Alert already sent for ${data.url}. Skipping email.`);
-
                     }
-
                 } else if (data.status === 'UP') {
-
                     if (activeAlerts.has(data.url)) {
-
                         console.log(` ${data.url} is back UP! Clearing alert status.`);
-
-
-
                         activeAlerts.delete(data.url);
-
                     }
-
                 }
 
                 channel.ack(msg);
-
             }
-        })
-
-
+        });
 
     } catch (error) {
-        console.error('error conneting to rabbitmq', error);
+        console.error('error connecting to rabbitmq', error);
     }
-
-
-
-}
+};
 
 const startServer = async () => {
     await connectDB();
