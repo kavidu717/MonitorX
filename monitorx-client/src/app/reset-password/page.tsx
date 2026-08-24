@@ -1,43 +1,53 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react";
+import { toast } from "sonner"
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import api from "@/utils/axios";
-import { useAuthStore } from "@/store/useAuthStore";
-import { toast } from "sonner";
+import Link from "next/link";
 
+export default function resetPasswordPage() {
 
-export default function LoginPage() {
+    const router = useRouter()
 
-    const router = useRouter();
-    const setToken = useAuthStore((state) => state.setToken)
+    const [otp, setOtp] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState("");
 
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [loading, setLoading] = useState(false)
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('resetEmail')
+        if (!savedEmail) {
+            toast.error("Session expired. Please request a new OTP.");
+            router.push("/forgot-password");
 
-    // login function
-    const handleLogin = async (e: React.FormEvent) => {
+        } else {
+            setEmail(savedEmail);
+        }
+    }, [])
+
+    const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setLoading(true)
 
         try {
-            const response = await api.post("/auth/login", {
-                email: email,
-                password: password,
+
+            const response = await api.post("/auth/reset-password", {
+                email,
+                otp,
+                newPassword
             });
 
-            const token = response.data.accessToken;
-            setToken(token);
+            toast.success(response.data.message || "Password reset successful!")
+            localStorage.removeItem("resetEmail");
+            router.push("/login");
 
-            toast.success("Successfully logged in!");
-            router.push("/");
-        }
-        catch (err: any) {
-            toast.error(err.response?.data?.message || "Invalid email or password!");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Invalid OTP or something went wrong.");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
+
+
     }
 
     return (
@@ -60,10 +70,10 @@ export default function LoginPage() {
                         </div>
 
                         <h1 className="text-5xl xl:text-6xl font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
-                            Unified observability <br /> for modern <span className="text-orange-500">teams.</span>
+                            Create your new <span className="text-orange-500">password.</span>
                         </h1>
                         <p className="text-lg text-slate-300 font-medium max-w-md leading-relaxed">
-                            Monitor infrastructure, applications, and networks from a single pane of glass. Detect anomalies before they impact your users.
+                            Almost there! Enter the OTP sent to your email along with your new password to restore access to your account.
                         </p>
                     </div>
 
@@ -71,19 +81,19 @@ export default function LoginPage() {
                     <div className="mt-12 pt-12 border-t border-slate-800">
                         <div className="grid grid-cols-2 gap-8">
                             <div>
-                                <div className="text-3xl font-bold text-white mb-1">99.9%</div>
-                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Uptime SLA</div>
+                                <div className="text-3xl font-bold text-white mb-1">Secure</div>
+                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Authentication</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold text-white mb-1">24/7</div>
-                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Global Support</div>
+                                <div className="text-3xl font-bold text-white mb-1">Fast</div>
+                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Recovery Process</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Login Form */}
+            {/* Right Side - Reset Password Form */}
             <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 xl:px-24 bg-white relative shadow-2xl z-10 lg:rounded-l-[2rem]">
                 {/* Mobile Logo Fallback */}
                 <div className="absolute top-8 left-6 sm:left-12 lg:hidden flex items-center gap-2">
@@ -95,44 +105,17 @@ export default function LoginPage() {
 
                 <div className="w-full max-w-md mx-auto">
                     <div className="mb-10 lg:mt-0">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Welcome back</h2>
-                        <p className="text-slate-500 font-medium text-sm">Please enter your details to access your dashboard.</p>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Reset password</h2>
+                        <p className="text-slate-500 font-medium text-sm">Please enter the 6-digit OTP and your new password.</p>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-5">
+                    <form onSubmit={handleResetPassword} className="space-y-5">
                         {/* Form Fields */}
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5">
-                                    Email Address
+                                <label htmlFor="otp" className="block text-sm font-semibold text-slate-700 mb-1.5">
+                                    OTP Code
                                 </label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                                        </svg>
-                                    </div>
-                                    <input
-                                        id="email"
-                                        type="email"
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white shadow-sm transition-all sm:text-sm font-medium"
-                                        placeholder="admin@monitorx.com"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
-                                        Password
-                                    </label>
-                                    <Link href="/forgot-password" className="text-sm font-semibold text-orange-600 hover:text-orange-500 transition-colors focus:outline-none">
-                                        Forgot password?
-                                    </Link>
-                                </div>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -140,11 +123,34 @@ export default function LoginPage() {
                                         </svg>
                                     </div>
                                     <input
-                                        id="password"
+                                        id="otp"
+                                        type="text"
+                                        required
+                                        maxLength={6}
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white shadow-sm transition-all sm:text-sm font-medium tracking-widest"
+                                        placeholder="123456"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor="newPassword" className="block text-sm font-semibold text-slate-700 mb-1.5">
+                                    New Password
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        id="newPassword"
                                         type="password"
                                         required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
                                         className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white shadow-sm transition-all sm:text-sm font-medium"
                                         placeholder="••••••••"
                                     />
@@ -165,10 +171,10 @@ export default function LoginPage() {
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Signing in...
+                                        Resetting Password...
                                     </>
                                 ) : (
-                                    "Sign In to Dashboard"
+                                    "Reset Password"
                                 )}
                             </button>
                         </div>
@@ -176,13 +182,15 @@ export default function LoginPage() {
 
                     {/* Footer Setup */}
                     <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-sm text-slate-500 font-medium">
-                        <span>New to MonitorX?</span>
-                        <Link href="/register" className="text-orange-600 hover:text-orange-500 font-bold transition-colors focus:outline-none focus:underline">
-                            Create an account
+                        <Link href="/login" className="text-orange-600 hover:text-orange-500 font-bold transition-colors focus:outline-none focus:underline flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back to Login
                         </Link>
                     </div>
                 </div>
             </div>
         </div>
-    )
+    );
 }

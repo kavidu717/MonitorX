@@ -1,43 +1,43 @@
 "use client"
-import { useState } from "react"
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import React, { useState } from "react"
 import api from "@/utils/axios";
-import { useAuthStore } from "@/store/useAuthStore";
+import Link from "next/link";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 
-export default function LoginPage() {
+export default function forgotPasswordPage() {
 
     const router = useRouter();
-    const setToken = useAuthStore((state) => state.setToken)
-
     const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
+    const [message, setMessage] = useState('')
+    const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
-    // login function
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+    //handle sunmit function
+    const handleForgotPassword = async (e: React.FormEvent) => {
+
+        e.preventDefault()
+        setLoading(true)
 
         try {
-            const response = await api.post("/auth/login", {
-                email: email,
-                password: password,
-            });
+            const response = await api.post("/auth/forgot-password", { email });
+            toast.success(response.data.message || "OTP has been sent to your email.");
+            localStorage.setItem("resetEmail", email);
 
-            const token = response.data.accessToken;
-            setToken(token);
+            router.push("/reset-password");
 
-            toast.success("Successfully logged in!");
-            router.push("/");
-        }
-        catch (err: any) {
-            toast.error(err.response?.data?.message || "Invalid email or password!");
+        } catch (err: any) {
+
+            toast.error(err.response?.data?.message || "Something went wrong. Please try again.");
+
         } finally {
             setLoading(false)
         }
+
+
+
+
     }
 
     return (
@@ -60,10 +60,10 @@ export default function LoginPage() {
                         </div>
 
                         <h1 className="text-5xl xl:text-6xl font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
-                            Unified observability <br /> for modern <span className="text-orange-500">teams.</span>
+                            Regain access to your <span className="text-orange-500">dashboard.</span>
                         </h1>
                         <p className="text-lg text-slate-300 font-medium max-w-md leading-relaxed">
-                            Monitor infrastructure, applications, and networks from a single pane of glass. Detect anomalies before they impact your users.
+                            No worries if you forgot your password. We'll send you an OTP to your registered email address to help you securely reset it and get back on track.
                         </p>
                     </div>
 
@@ -71,19 +71,19 @@ export default function LoginPage() {
                     <div className="mt-12 pt-12 border-t border-slate-800">
                         <div className="grid grid-cols-2 gap-8">
                             <div>
-                                <div className="text-3xl font-bold text-white mb-1">99.9%</div>
-                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Uptime SLA</div>
+                                <div className="text-3xl font-bold text-white mb-1">Secure</div>
+                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Authentication</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold text-white mb-1">24/7</div>
-                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Global Support</div>
+                                <div className="text-3xl font-bold text-white mb-1">Fast</div>
+                                <div className="text-sm font-medium text-slate-400 uppercase tracking-wider">Recovery Process</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Login Form */}
+            {/* Right Side - Forgot Password Form */}
             <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 xl:px-24 bg-white relative shadow-2xl z-10 lg:rounded-l-[2rem]">
                 {/* Mobile Logo Fallback */}
                 <div className="absolute top-8 left-6 sm:left-12 lg:hidden flex items-center gap-2">
@@ -95,11 +95,11 @@ export default function LoginPage() {
 
                 <div className="w-full max-w-md mx-auto">
                     <div className="mb-10 lg:mt-0">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Welcome back</h2>
-                        <p className="text-slate-500 font-medium text-sm">Please enter your details to access your dashboard.</p>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Forgot password?</h2>
+                        <p className="text-slate-500 font-medium text-sm">Enter the email associated with your account and we'll send an OTP to reset your password.</p>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-5">
+                    <form onSubmit={handleForgotPassword} className="space-y-5">
                         {/* Form Fields */}
                         <div className="space-y-4">
                             <div>
@@ -123,33 +123,6 @@ export default function LoginPage() {
                                     />
                                 </div>
                             </div>
-
-                            <div>
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
-                                        Password
-                                    </label>
-                                    <Link href="/forgot-password" className="text-sm font-semibold text-orange-600 hover:text-orange-500 transition-colors focus:outline-none">
-                                        Forgot password?
-                                    </Link>
-                                </div>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-orange-500 transition-colors">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
-                                    </div>
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white shadow-sm transition-all sm:text-sm font-medium"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </div>
                         </div>
 
                         {/* Submit Button */}
@@ -165,10 +138,10 @@ export default function LoginPage() {
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Signing in...
+                                        Sending OTP...
                                     </>
                                 ) : (
-                                    "Sign In to Dashboard"
+                                    "Send OTP"
                                 )}
                             </button>
                         </div>
@@ -176,9 +149,12 @@ export default function LoginPage() {
 
                     {/* Footer Setup */}
                     <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-sm text-slate-500 font-medium">
-                        <span>New to MonitorX?</span>
-                        <Link href="/register" className="text-orange-600 hover:text-orange-500 font-bold transition-colors focus:outline-none focus:underline">
-                            Create an account
+                        <span>Remember your password?</span>
+                        <Link href="/login" className="text-orange-600 hover:text-orange-500 font-bold transition-colors focus:outline-none focus:underline flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back to Login
                         </Link>
                     </div>
                 </div>
